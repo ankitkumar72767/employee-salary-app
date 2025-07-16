@@ -8,3 +8,5 @@ seaborn
 xgboost
 shap
 fpdf
+PyPDF2
+
