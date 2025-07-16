@@ -48,7 +48,8 @@ def load_model():
 
 @st.cache_data
 def load_data():
-    return pd.read_csv("employee_data.csv")
+    return pd.read_csv("data/employee_data.csv")
+
 
 def show():
     st.markdown("<div class='title-header'>📈 Model Performance Analytics</div>", unsafe_allow_html=True)
