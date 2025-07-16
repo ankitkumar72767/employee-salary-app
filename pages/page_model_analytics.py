@@ -4,9 +4,14 @@ import numpy as np
 import joblib
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.model_selection import cross_val_score
 import shap
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import r2_score
 
+# ----------------- Page Config -----------------
+st.set_page_config(page_title="Model Analytics", layout="wide")
+
+# ----------------- Custom Styling -----------------
 st.markdown("""
     <style>
     .stApp {
@@ -42,6 +47,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# ----------------- Load Resources -----------------
 @st.cache_resource
 def load_model():
     return joblib.load("models/salary_model.pkl")
@@ -50,7 +56,7 @@ def load_model():
 def load_data():
     return pd.read_csv("data/employee_data.csv")
 
-
+# ----------------- Show Function -----------------
 def show():
     st.markdown("<div class='title-header'>📈 Model Performance Analytics</div>", unsafe_allow_html=True)
 
@@ -59,14 +65,14 @@ def show():
 
     X = df.drop("Salary", axis=1)
     y = df["Salary"]
-
     preds = model.predict(X)
-    r2 = model.score(X, y)
     residuals = y - preds
+
+    r2 = r2_score(y, preds)
     rmse = np.sqrt(np.mean(residuals ** 2))
     mae = np.mean(np.abs(residuals))
 
-    # Metrics
+    # -------- Model Metrics --------
     with st.container():
         st.markdown("<div class='analytics-section'>", unsafe_allow_html=True)
         st.subheader("✅ Trained Model Metrics")
@@ -76,7 +82,7 @@ def show():
         col3.metric("MAE", f"₹{mae / 100000:.2f} L")
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # Cross Validation
+    # -------- Cross Validation --------
     with st.container():
         st.markdown("<div class='analytics-section'>", unsafe_allow_html=True)
         st.subheader("✅ Cross Validation")
@@ -84,7 +90,7 @@ def show():
         st.write(f"Mean CV Score: **{scores.mean():.3f} ± {scores.std():.3f}**")
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # Feature Importance
+    # -------- Feature Importance --------
     with st.container():
         st.markdown("<div class='analytics-section'>", unsafe_allow_html=True)
         st.subheader("🎯 Feature Importance")
@@ -103,7 +109,7 @@ def show():
             st.error(f"⚠️ Feature importances could not be extracted: {e}")
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # Prediction Distribution
+    # -------- Prediction Distribution --------
     with st.container():
         st.markdown("<div class='analytics-section'>", unsafe_allow_html=True)
         st.subheader("📊 Prediction Distribution")
@@ -115,7 +121,7 @@ def show():
         plt.close(fig2)
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # Residual Plot
+    # -------- Residual Plot --------
     with st.container():
         st.markdown("<div class='analytics-section'>", unsafe_allow_html=True)
         st.subheader("📉 Residual Plot")
@@ -129,7 +135,7 @@ def show():
         plt.close(fig3)
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # Model Comparison Table
+    # -------- Model Comparison --------
     with st.container():
         st.markdown("<div class='analytics-section'>", unsafe_allow_html=True)
         st.subheader("🏆 Model Comparison")
@@ -141,7 +147,7 @@ def show():
         }))
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # SHAP Explainability Plot
+    # -------- SHAP Explainability --------
     with st.container():
         st.markdown("<div class='analytics-section'>", unsafe_allow_html=True)
         st.subheader("🧠 SHAP Explainability (Feature Impact)")
@@ -150,8 +156,7 @@ def show():
             X_transformed = model.named_steps["preprocessor"].transform(X)
             feature_names = model.named_steps["preprocessor"].get_feature_names_out()
 
-            shap_values = explainer(X_transformed[:100])  # limit for speed
-
+            shap_values = explainer(X_transformed[:100])  # speed limit
             fig, ax = plt.subplots(figsize=(10, 6))
             shap.summary_plot(shap_values, X_transformed[:100], feature_names=feature_names, show=False)
             st.pyplot(fig)
